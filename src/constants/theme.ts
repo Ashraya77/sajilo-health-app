@@ -26,6 +26,28 @@ export const Colors = {
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
+export const brandColors = {
+  primary: '#3A6AD6',
+  primaryDark: '#131C34',
+  primaryMuted: '#4A71C7',
+  slate: '#2F436F',
+  softBlue: '#95A7CA',
+  surfaceBlue: '#D9E1EE',
+  white: '#FFFFFF',
+} as const;
+
+export const splashColors = {
+  background: brandColors.white,
+  primaryDark: '#1D2D5C',
+  primary: '#4A7FF0',
+  primaryLight: '#6D9BFF',
+  surface: brandColors.white,
+  surfaceBorder: '#EEF3FF',
+  mutedText: '#8392B5',
+  inactiveDot: '#C9D7F5',
+  watermark: '#4A7FF0',
+} as const;
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */
@@ -59,6 +81,13 @@ export const Spacing = {
   four: 24,
   five: 32,
   six: 64,
+} as const;
+
+export const Radius = {
+  small: 8,
+  medium: 16,
+  large: 28,
+  pill: 999,
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
