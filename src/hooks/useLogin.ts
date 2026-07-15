@@ -4,6 +4,7 @@ import {
   login as loginWithCredentials,
   type LoginResponse,
 } from '@/services/authService';
+import { useAuthSession } from '@/hooks/useAuthSession';
 
 type UseLoginResult = {
   loading: boolean;
@@ -44,20 +45,23 @@ function getErrorMessage(error: unknown): string {
 export function useLogin(): UseLoginResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { markAuthenticated } = useAuthSession();
 
   const login = useCallback(async (username: string, password: string) => {
     setLoading(true);
     setError(null);
 
     try {
-      return await loginWithCredentials(username, password);
+      const response = await loginWithCredentials(username, password);
+      markAuthenticated();
+      return response;
     } catch (loginError: unknown) {
       setError(getErrorMessage(loginError));
       throw loginError;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [markAuthenticated]);
 
   return {
     loading,

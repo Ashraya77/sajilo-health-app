@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 
 import { brandColors } from '@/constants/theme';
+import { AuthSessionProvider } from '@/hooks/useAuthSession';
 import { SplashScreen as StartupSplashScreen } from '@/screens/SplashScreen';
 
 void SplashScreen.preventAutoHideAsync();
@@ -95,55 +96,58 @@ export default function TabLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarActiveTintColor: brandColors.primary,
-          tabBarInactiveTintColor: brandColors.softBlue,
-          tabBarLabelStyle: styles.tabLabel,
-          tabBarStyle: styles.tabBar,
-        }}>
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: 'Home',
-            tabBarIcon: ({ color, size }) => (
-              <TabIcon
-                color={color}
-                source={require('@/assets/images/tabIcons/home.png')}
-                size={size}
-              />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="login"
-          options={{
-            title: 'Login',
-            tabBarIcon: ({ color, size }) => (
-              <TabIcon
-                color={color}
-                source={require('@/assets/images/tabIcons/explore.png')}
-                size={size}
-              />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="profile"
-          options={{
-            title: 'Profile',
-            tabBarIcon: ({ color, size }) => (
-              <ProfileTabIcon color={color} size={size} />
-            ),
-          }}
-        />
-      </Tabs>
-      {showStartupSplash && (
-        <View style={[StyleSheet.absoluteFill, styles.startupSplash]}>
-          <StartupSplashScreen />
-        </View>
-      )}
+      <AuthSessionProvider>
+        <Tabs
+          screenOptions={{
+            headerShown: false,
+            tabBarActiveTintColor: brandColors.primary,
+            tabBarInactiveTintColor: brandColors.softBlue,
+            tabBarLabelStyle: styles.tabLabel,
+            tabBarStyle: styles.tabBar,
+          }}>
+          <Tabs.Screen
+            name="index"
+            options={{
+              title: 'Home',
+              tabBarIcon: ({ color, size }) => (
+                <TabIcon
+                  color={color}
+                  source={require('@/assets/images/tabIcons/home.png')}
+                  size={size}
+                />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="login"
+            options={{
+              href: null,
+              title: 'Login',
+              tabBarIcon: ({ color, size }) => (
+                <TabIcon
+                  color={color}
+                  source={require('@/assets/images/tabIcons/explore.png')}
+                  size={size}
+                />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="profile"
+            options={{
+              title: 'Profile',
+              tabBarIcon: ({ color, size }) => (
+                <ProfileTabIcon color={color} size={size} />
+              ),
+            }}
+          />
+        </Tabs>
+        {showStartupSplash && (
+          <View style={[StyleSheet.absoluteFill, styles.startupSplash]}>
+            <StartupSplashScreen />
+          </View>
+        )}
+      </AuthSessionProvider>
     </ThemeProvider>
   );
 }
