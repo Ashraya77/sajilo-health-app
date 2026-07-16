@@ -1,277 +1,53 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCallback, useMemo } from 'react';
+import { isAxiosError } from 'axios';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated, { FadeInUp } from 'react-native-reanimated';
+import { Activity, Bell, CalendarDays, ClipboardList, Crown, FileHeart, FileText, HelpCircle, HeartPulse, LockKeyhole, LogOut, Microscope, Pill, ShieldCheck, Smartphone, Stethoscope, UserRound } from 'lucide-react-native';
 
-import {
-  BottomTabInset,
-  Fonts,
-  Radius,
-  Spacing,
-  brandColors,
-  splashColors,
-} from '@/constants/theme';
+import { HealthCard } from '@/components/profile/HealthCard';
+import { ProfileHeader } from '@/components/profile/ProfileHeader';
+import { ProfileLoading } from '@/components/profile/ProfileLoading';
+import { SectionTitle } from '@/components/profile/SectionTitle';
+import { SettingCard } from '@/components/profile/SettingCard';
+import { StatCard } from '@/components/profile/StatCard';
+import { BottomTabInset, Fonts, Spacing, brandColors, profileColors } from '@/constants/theme';
+import { useAuthSession } from '@/hooks/useAuthSession';
+import { useProfileDashboard } from '@/hooks/useProfileDashboard';
+import type { PatientProfile } from '@/types/profile';
 
-type MenuItemProps = {
-  label: string;
-  detail?: string;
-  onPress?: () => void;
-};
-
-function MenuItem({ label, detail, onPress }: MenuItemProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.menuItem,
-        pressed && styles.menuItemPressed,
-      ]}>
-      <Text style={styles.menuLabel}>{label}</Text>
-      <Text style={styles.menuDetail}>{detail ?? '›'}</Text>
-    </Pressable>
-  );
-}
-
-type MenuSectionProps = {
-  title: string;
-  children: React.ReactNode;
-};
-
-function MenuSection({ title, children }: MenuSectionProps) {
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <View style={styles.sectionCard}>{children}</View>
-    </View>
-  );
-}
-
-function AvatarPlaceholder({ name }: { name: string }) {
-  const initials = name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-
-  return (
-    <View style={styles.avatar}>
-      <Text style={styles.avatarText}>{initials}</Text>
-    </View>
-  );
+function calculateAge(dateOfBirth?: string): string { if (!dateOfBirth) return '—'; const birth = new Date(dateOfBirth); if (Number.isNaN(birth.getTime())) return '—'; const now = new Date(); let age = now.getFullYear() - birth.getFullYear(); const hasHadBirthday = now.getMonth() > birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() >= birth.getDate()); return `${hasHadBirthday ? age : age - 1} yrs`; }
+function calculateBmi(profile: PatientProfile): string { if (!profile.heightCm || !profile.weightKg) return '—'; const heightMetres = profile.heightCm / 100; return (profile.weightKg / (heightMetres * heightMetres)).toFixed(1); }
+function getProfileLoadMessage(error: unknown): string {
+  if (isAxiosError(error)) {
+    if (error.response?.status === 401) return 'Your session has expired. Please sign in again.';
+    if (error.response?.status === 403) return 'You do not have permission to view this profile.';
+    if (error.response?.status === 404) return 'Your account profile is not available yet.';
+    if (!error.response) return 'We could not reach Sajilo Health. Check your connection and try again.';
+  }
+  return 'Please try again. Your health information remains safely protected.';
 }
 
 export function ProfileScreen() {
-  const insets = useSafeAreaInsets();
+  const { logout } = useAuthSession();
+  const { data, error, isLoading, isError, isRefetching, refresh } = useProfileDashboard();
+  const healthMetrics = useMemo(() => data ? [
+    { label: 'Blood group', value: data.profile.bloodGroup ?? '—', icon: HeartPulse }, { label: 'Gender', value: data.profile.gender ?? '—', icon: UserRound }, { label: 'Age', value: calculateAge(data.profile.dateOfBirth), icon: CalendarDays }, { label: 'Height', value: data.profile.heightCm ? `${data.profile.heightCm} cm` : '—', icon: Activity }, { label: 'Weight', value: data.profile.weightKg ? `${data.profile.weightKg} kg` : '—', icon: Activity }, { label: 'BMI', value: calculateBmi(data.profile), icon: HeartPulse }, { label: 'Allergies', value: `${data.profile.allergiesCount}`, icon: ShieldCheck }, { label: 'Conditions', value: `${data.profile.chronicConditionsCount}`, icon: ClipboardList },
+  ] : [], [data]);
+  const handleRefresh = useCallback(() => { void refresh(); }, [refresh]);
+  const handleEdit = useCallback(() => {}, []);
 
-  // Placeholder data — replace with real user data from a hook/store
-  const user = {
-    name: 'Ashraya',
-    email: 'ashraya@sajilohealth.com',
-    phone: '+977 98XXXXXXXX',
-    memberSince: 'July 2025',
-  };
+  if (isLoading) return <SafeAreaView style={[styles.screen, styles.loadingScreen]}><ProfileLoading /></SafeAreaView>;
+  if (isError || !data) return <SafeAreaView style={[styles.screen, styles.errorScreen]}><HeartPulse color={brandColors.primary} size={42}/><Text style={styles.errorTitle}>We couldn’t load your profile</Text><Text style={styles.errorBody}>{getProfileLoadMessage(error)}</Text><Pressable onPress={handleRefresh} style={styles.retryButton}><Text style={styles.retryText}>Try again</Text></Pressable></SafeAreaView>;
 
-  return (
-    <ScrollView
-      style={styles.screen}
-      contentContainerStyle={[
-        styles.content,
-        {
-          paddingTop: insets.top + Spacing.five,
-          paddingBottom: insets.bottom + BottomTabInset + Spacing.five,
-        },
-      ]}>
-      {/* Profile header */}
-      <View style={styles.profileHeader}>
-        <AvatarPlaceholder name={user.name} />
-        <Text style={styles.userName}>{user.name}</Text>
-        <Text style={styles.userEmail}>{user.email}</Text>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>Member since {user.memberSince}</Text>
-        </View>
-      </View>
-
-      {/* Account section */}
-      <MenuSection title="Account">
-        <MenuItem label="Edit profile" />
-        <MenuItem label="Phone" detail={user.phone} />
-        <MenuItem label="Email" detail={user.email} />
-      </MenuSection>
-
-      {/* Health section */}
-      <MenuSection title="Health">
-        <MenuItem label="Medical records" />
-        <MenuItem label="Prescriptions" />
-        <MenuItem label="Insurance info" />
-      </MenuSection>
-
-      {/* Preferences section */}
-      <MenuSection title="Preferences">
-        <MenuItem label="Notifications" />
-        <MenuItem label="Language" detail="English" />
-        <MenuItem label="Appearance" detail="System" />
-      </MenuSection>
-
-      {/* Support section */}
-      <MenuSection title="Support">
-        <MenuItem label="Help center" />
-        <MenuItem label="Privacy policy" />
-        <MenuItem label="Terms of service" />
-      </MenuSection>
-
-      {/* Sign out */}
-      <Pressable
-        style={({ pressed }) => [
-          styles.signOutButton,
-          pressed && styles.signOutPressed,
-        ]}>
-        <Text style={styles.signOutText}>Sign out</Text>
-      </Pressable>
-
-      <Text style={styles.version}>SajiloHealth v1.0.0</Text>
-    </ScrollView>
-  );
+  return <SafeAreaView style={styles.screen} edges={['top']}><ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} tintColor={brandColors.primary} />} showsVerticalScrollIndicator={false}>
+    <Animated.View entering={FadeInUp.duration(450)}><ProfileHeader profile={data.profile} onEdit={handleEdit}/></Animated.View>
+    <Animated.View entering={FadeInUp.delay(70).duration(450)} style={styles.section}><SectionTitle eyebrow="Your health" title="A clearer picture of you"/><HealthCard metrics={healthMetrics}/></Animated.View>
+    <Animated.View entering={FadeInUp.delay(130).duration(450)} style={styles.section}><SectionTitle eyebrow="At a glance" title="Your care journey"/><View style={styles.stats}><StatCard delay={180} icon={CalendarDays} label="Appointments" value={data.appointmentsCount}/><StatCard delay={230} icon={Pill} label="Prescriptions" value={data.prescriptionsCount}/><StatCard delay={280} icon={FileText} label="Reports" value={data.reportsCount}/><StatCard delay={330} icon={Stethoscope} label="Doctors visited" value={data.doctorsVisitedCount}/></View></Animated.View>
+    <Animated.View entering={FadeInUp.delay(190).duration(450)} style={styles.section}><SectionTitle eyebrow="Care hub" title="Medical"/><View style={styles.settingList}><SettingCard icon={FileHeart} title="Medical records" subtitle="Your personal health history"/><SettingCard icon={Pill} title="Prescriptions" subtitle={`${data.prescriptionsCount} active and past prescriptions`}/><SettingCard icon={Microscope} title="Lab reports" subtitle={`${data.reportsCount} reports ready to review`}/><SettingCard icon={Crown} title="Membership" subtitle={data.membershipsCount ? `${data.membershipsCount} active plan` : 'Explore member benefits'}/><SettingCard icon={ShieldCheck} title="Consent management" subtitle={`${data.consentsCount} consent preferences`}/></View></Animated.View>
+    <Animated.View entering={FadeInUp.delay(250).duration(450)} style={styles.section}><SectionTitle eyebrow="In your control" title="Security"/><View style={styles.settingList}><SettingCard icon={Smartphone} title="Devices" subtitle={data.devicesCount ? `${data.devicesCount} trusted devices` : 'Manage trusted devices'}/><SettingCard icon={LockKeyhole} title="Biometric login" subtitle="Secure, quick access"/><SettingCard icon={ShieldCheck} title="Privacy" subtitle="Control your health data"/><SettingCard icon={Bell} title="Notifications" subtitle="Appointments and care updates"/></View></Animated.View>
+    <Animated.View entering={FadeInUp.delay(310).duration(450)} style={styles.section}><SectionTitle eyebrow="Here for you" title="Support"/><View style={styles.settingList}><SettingCard icon={HelpCircle} title="Help" subtitle="Get support from Sajilo Health"/><SettingCard icon={Activity} title="About Sajilo Health" subtitle="Version and care mission"/><SettingCard icon={FileText} title="Terms" subtitle="Review our terms of service"/><SettingCard icon={LogOut} onPress={() => { void logout(); }} title="Log out" subtitle="Sign out securely on this device" tone="danger"/></View></Animated.View>
+  </ScrollView></SafeAreaView>;
 }
-
 export default ProfileScreen;
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: brandColors.white,
-  },
-  content: {
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-
-  /* ── Profile header ── */
-  profileHeader: {
-    alignItems: 'center',
-    gap: Spacing.two,
-    paddingVertical: Spacing.four,
-  },
-  avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: brandColors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.one,
-  },
-  avatarText: {
-    color: brandColors.white,
-    fontFamily: Fonts.sans,
-    fontSize: 32,
-    fontWeight: '700',
-    letterSpacing: 0,
-  },
-  userName: {
-    color: brandColors.primaryDark,
-    fontFamily: Fonts.sans,
-    fontSize: 24,
-    fontWeight: '700',
-    letterSpacing: 0,
-  },
-  userEmail: {
-    color: brandColors.slate,
-    fontFamily: Fonts.sans,
-    fontSize: 15,
-    fontWeight: '500',
-    letterSpacing: 0,
-  },
-  badge: {
-    marginTop: Spacing.one,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one + 2,
-    borderRadius: Radius.pill,
-    backgroundColor: splashColors.surfaceBorder,
-  },
-  badgeText: {
-    color: brandColors.primaryMuted,
-    fontFamily: Fonts.sans,
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 0,
-  },
-
-  /* ── Sections ── */
-  section: {
-    gap: Spacing.two,
-  },
-  sectionTitle: {
-    color: brandColors.slate,
-    fontFamily: Fonts.sans,
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    paddingHorizontal: Spacing.one,
-  },
-  sectionCard: {
-    borderRadius: Radius.medium,
-    backgroundColor: brandColors.white,
-    borderWidth: 1,
-    borderColor: brandColors.surfaceBlue,
-    overflow: 'hidden',
-  },
-
-  /* ── Menu items ── */
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.three,
-    paddingHorizontal: Spacing.three,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: brandColors.surfaceBlue,
-  },
-  menuItemPressed: {
-    backgroundColor: splashColors.surfaceBorder,
-  },
-  menuLabel: {
-    color: brandColors.primaryDark,
-    fontFamily: Fonts.sans,
-    fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 0,
-  },
-  menuDetail: {
-    color: brandColors.softBlue,
-    fontFamily: Fonts.sans,
-    fontSize: 15,
-    fontWeight: '500',
-    letterSpacing: 0,
-  },
-
-  /* ── Sign out ── */
-  signOutButton: {
-    minHeight: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: Radius.small,
-    borderWidth: 1,
-    borderColor: brandColors.surfaceBlue,
-    backgroundColor: brandColors.white,
-  },
-  signOutPressed: {
-    backgroundColor: splashColors.surfaceBorder,
-  },
-  signOutText: {
-    color: brandColors.primary,
-    fontFamily: Fonts.sans,
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0,
-  },
-
-  /* ── Footer ── */
-  version: {
-    textAlign: 'center',
-    color: brandColors.softBlue,
-    fontFamily: Fonts.sans,
-    fontSize: 13,
-    fontWeight: '500',
-    letterSpacing: 0,
-  },
-});
+const styles = StyleSheet.create({ screen: { backgroundColor: profileColors.canvas, flex: 1 }, content: { gap: Spacing.five, paddingBottom: BottomTabInset + Spacing.five, paddingHorizontal: Spacing.three, paddingTop: Spacing.two }, loadingScreen: { paddingHorizontal: Spacing.three, paddingTop: Spacing.four }, errorScreen: { alignItems: 'center', gap: Spacing.two, justifyContent: 'center', paddingHorizontal: Spacing.five }, errorTitle: { color: brandColors.primaryDark, fontFamily: Fonts.rounded, fontSize: 22, fontWeight: '800', marginTop: Spacing.two }, errorBody: { color: brandColors.slate, fontFamily: Fonts.sans, fontSize: 15, lineHeight: 22, textAlign: 'center' }, retryButton: { backgroundColor: brandColors.primary, borderRadius: 999, marginTop: Spacing.two, paddingHorizontal: Spacing.three, paddingVertical: Spacing.two }, retryText: { color: brandColors.white, fontFamily: Fonts.sans, fontSize: 14, fontWeight: '800' }, section: { gap: Spacing.three }, stats: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, justifyContent: 'space-between' }, settingList: { gap: Spacing.two } });

@@ -18,6 +18,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
 
 function getErrorMessage(error: unknown): string {
   if (isObject(error) && isObject(error.response)) {
+    const status = error.response.status;
     const data = error.response.data;
 
     if (isObject(data)) {
@@ -32,6 +33,10 @@ function getErrorMessage(error: unknown): string {
       if (Array.isArray(nonFieldErrors) && typeof nonFieldErrors[0] === 'string') {
         return nonFieldErrors[0];
       }
+    }
+
+    if (status === 401) {
+      return 'Invalid username or password.';
     }
   }
 

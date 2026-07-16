@@ -29,6 +29,19 @@ export const splashColors = {
   watermark: '#4A7FF0',
 } as const;
 
+export const profileColors = {
+  canvas: '#F5F8FE',
+  tint: '#EAF0FF',
+  sky: '#EAF6FF',
+  card: brandColors.white,
+  shadow: '#172B5A',
+  danger: '#C2465C',
+  dangerSurface: '#FDECEF',
+  darkCanvas: '#0E1730',
+  darkCard: '#17213D',
+  darkText: '#F5F8FF',
+} as const;
+
 export const Fonts = Platform.select({
   ios: {
     /** iOS `UIFontDescriptorSystemDesignDefault` */

@@ -1,6 +1,7 @@
 import * as SplashScreen from 'expo-splash-screen';
 import { DarkTheme, DefaultTheme, Tabs, ThemeProvider } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   Image,
   StyleSheet,
@@ -15,6 +16,10 @@ import { AuthSessionProvider } from '@/hooks/useAuthSession';
 import { SplashScreen as StartupSplashScreen } from '@/screens/SplashScreen';
 
 void SplashScreen.preventAutoHideAsync();
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: 1, staleTime: 60_000 } },
+});
 
 SplashScreen.setOptions({
   duration: 700,
@@ -97,6 +102,7 @@ export default function TabLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthSessionProvider>
+      <QueryClientProvider client={queryClient}>
         <Tabs
           screenOptions={{
             headerShown: false,
@@ -147,6 +153,7 @@ export default function TabLayout() {
             <StartupSplashScreen />
           </View>
         )}
+      </QueryClientProvider>
       </AuthSessionProvider>
     </ThemeProvider>
   );

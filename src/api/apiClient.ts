@@ -1,4 +1,10 @@
-import { AxiosHeaders, create, isAxiosError, type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import {
+  AxiosHeaders,
+  create,
+  isAxiosError,
+  type AxiosError,
+  type InternalAxiosRequestConfig,
+} from 'axios';
 
 import { ENDPOINTS } from '@/api/endpoints';
 import {
@@ -32,11 +38,19 @@ const refreshClient = create({
 
 let refreshPromise: Promise<string | null> | null = null;
 
+const AUTH_EXEMPT_ENDPOINTS: ReadonlySet<string> = new Set([
+  ENDPOINTS.LOGIN,
+  ENDPOINTS.REFRESH_TOKEN,
+]);
+
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function getStringField(source: Record<string, unknown>, keys: string[]): string | null {
+function getStringField(
+  source: Record<string, unknown>,
+  keys: string[],
+): string | null {
   for (const key of keys) {
     const value = source[key];
 
@@ -53,15 +67,42 @@ function extractAccessToken(data: unknown): string | null {
     return null;
   }
 
-  const topLevelToken = getStringField(data, ['access', 'access_token', 'accessToken', 'token']);
+  const topLevelToken = getStringField(data, [
+    'access',
+    'access_token',
+    'accessToken',
+    'token',
+  ]);
 
   if (topLevelToken) {
     return topLevelToken;
   }
 
   return isObject(data.data)
-    ? getStringField(data.data, ['access', 'access_token', 'accessToken', 'token'])
+    ? getStringField(data.data, [
+        'access',
+        'access_token',
+        'accessToken',
+        'token',
+      ])
     : null;
+}
+
+function shouldAttachAuthHeader(url?: string): boolean {
+  return !isAuthExemptEndpoint(url);
+}
+
+function isAuthExemptEndpoint(url?: string): boolean {
+  if (!url) {
+    return false;
+  }
+
+  try {
+    const path = url.startsWith('http') ? new URL(url).pathname : url;
+    return AUTH_EXEMPT_ENDPOINTS.has(path);
+  } catch {
+    return AUTH_EXEMPT_ENDPOINTS.has(url);
+  }
 }
 
 async function refreshAccessToken(): Promise<string | null> {
@@ -72,13 +113,10 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 
   try {
-    const response = await refreshClient.post(
-      ENDPOINTS.REFRESH_TOKEN,
-      {
-        refresh: refreshToken,
-        refresh_token: refreshToken,
-      },
-    );
+    const response = await refreshClient.post(ENDPOINTS.REFRESH_TOKEN, {
+      refresh: refreshToken,
+      refresh_token: refreshToken,
+    });
     const accessToken = extractAccessToken(response.data);
 
     if (!accessToken) {
@@ -96,6 +134,10 @@ async function refreshAccessToken(): Promise<string | null> {
 
 apiClient.interceptors.request.use(
   async (config) => {
+    if (!shouldAttachAuthHeader(config.url)) {
+      return config;
+    }
+
     const token = await getAccessToken();
 
     if (token) {
@@ -117,12 +159,15 @@ apiClient.interceptors.response.use(
     }
 
     const axiosError = error as AxiosError;
-    const originalRequest = axiosError.config as RetriableRequestConfig | undefined;
+    const originalRequest = axiosError.config as
+      | RetriableRequestConfig
+      | undefined;
 
     if (
       axiosError.response?.status !== 401 ||
       !originalRequest ||
-      originalRequest._retry
+      originalRequest._retry ||
+      isAuthExemptEndpoint(originalRequest.url)
     ) {
       return Promise.reject(error);
     }

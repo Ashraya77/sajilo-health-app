@@ -1,4 +1,15 @@
 export const ENDPOINTS = {
   LOGIN: '/v1/accounts/auth/login/',
   REFRESH_TOKEN: '/v1/accounts/auth/refresh/',
+  ME: '/v1/accounts/me/',
+  PATIENT_PROFILE: '/v1/accounts/me/patient-profile/',
+  USER_CONTEXTS: '/v1/accounts/me/contexts/',
+  DEVICES: '/v1/accounts/auth/devices/',
+  CONSENTS: '/v1/clinics/clinic/patient/consents/',
+  APPROVE_CONSENT: '/v1/clinics/clinic/patient/consents/approve/',
+  REJECT_CONSENT: '/v1/clinics/clinic/patient/consents/reject/',
+  MEMBERSHIPS: '/v1/clinics/clinic/patient/memberships/',
+  PATIENT_CHART: '/v1/clinics/clinic/patient/chart/',
+  DIAGNOSTICS: '/v1/clinics/clinic/patient/diagnostics/',
+  PRESCRIPTIONS: '/v1/my/prescriptions/',
 } as const;
