@@ -1,15 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { getRecentDiagnostics } from '@/services/home.service';
+import { getDiagnostics } from '@/services/diagnostics.service';
 import type { ApiDiagnosticReport } from '@/types/home';
 
-const recentDiagnosticsKey = ['home-recent-diagnostics'] as const;
+const recentDiagnosticsKey = (clinicId?: string) => ['home-recent-diagnostics', clinicId] as const;
 
-/** Fetches newly available diagnostic reports for the Home Hero. */
-export function useRecentDiagnostics() {
+/** Fetches clinic-scoped reports only when the caller supplies a selected clinic. */
+export function useRecentDiagnostics(clinicId?: string) {
   return useQuery<ApiDiagnosticReport[]>({
-    queryKey: recentDiagnosticsKey,
-    queryFn: getRecentDiagnostics,
+    queryKey: recentDiagnosticsKey(clinicId),
+    queryFn: () => (clinicId ? getDiagnostics(clinicId) : Promise.resolve([])),
+    enabled: Boolean(clinicId),
   });
 }
 

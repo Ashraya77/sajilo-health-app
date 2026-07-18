@@ -1,89 +1,93 @@
-import { Bell, Search } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar, SkeletonBlock } from '@/components';
-import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
+import { HomeGreeting } from '@/components/home/HomeGreeting';
+import { Colors, Radius, Spacing } from '@/constants/theme';
+
+const AVATAR_SIZE = Spacing.five + Spacing.two;
+const PROFILE_ACTION_SIZE = Spacing.five + Spacing.twoHalf;
 
 type HomeHeaderProps = {
-  firstName: string;
+  firstName?: string;
+  greeting: string;
   photoUri?: string;
   isLoading: boolean;
-  topInset: number;
-  onSearchPress?: () => void;
-  onNotificationsPress?: () => void;
+  onProfilePress: () => void;
 };
 
 export function HomeHeader({
   firstName,
+  greeting,
   photoUri,
   isLoading,
-  topInset,
-  onSearchPress,
-  onNotificationsPress,
+  onProfilePress,
 }: HomeHeaderProps) {
-  return (
-    <View style={[styles.container, { paddingTop: topInset + Spacing.three }]}>
-      {isLoading ? <HeaderIdentitySkeleton /> : (
-        <View style={styles.identity}>
-          <Avatar name={firstName} size={40} uri={photoUri} />
-          <View>
-            <Text style={styles.greeting}>Hi there 👋</Text>
-            <Text style={styles.name}>{firstName}</Text>
-          </View>
-        </View>
-      )}
+  const avatarName = firstName ?? 'Patient';
 
-      <View style={styles.actions}>
-        <IconButton accessibilityLabel="Search" icon={Search} onPress={onSearchPress} />
-        <View>
-          <IconButton accessibilityLabel="Notifications" icon={Bell} onPress={onNotificationsPress} />
-          <View accessibilityLabel="Unread notifications" style={styles.notificationDot} />
-        </View>
-      </View>
+  return (
+    <View style={styles.container}>
+      {isLoading ? <HeaderIdentitySkeleton /> : (
+        <>
+          <HomeGreeting
+            firstName={firstName}
+            greeting={greeting}
+            supportingText="How can we help you today?"
+          />
+          <Pressable
+            accessibilityHint="Navigates to your profile"
+            accessibilityLabel="Open profile"
+            accessibilityRole="button"
+            accessible
+            hitSlop={Spacing.two}
+            onPress={onProfilePress}
+            style={({ pressed }) => [styles.profileAction, pressed && styles.profileActionPressed]}
+          >
+            <Avatar name={avatarName} size={AVATAR_SIZE} uri={photoUri} />
+          </Pressable>
+        </>
+      )}
     </View>
   );
 }
 
 function HeaderIdentitySkeleton() {
   return (
-    <View style={styles.identity}>
-      <SkeletonBlock height={40} radius={Radius.full} width={40} />
+    <View style={styles.loadingContainer}>
       <View style={styles.skeletonCopy}>
-        <SkeletonBlock height={12} radius={Radius.sm} width={72} />
-        <SkeletonBlock height={16} radius={Radius.sm} width={112} />
+        <SkeletonBlock height={Spacing.three} radius={Radius.sm} width="38%" />
+        <SkeletonBlock height={Spacing.four} radius={Radius.sm} width="62%" />
+        <SkeletonBlock height={Spacing.three} radius={Radius.sm} width="76%" />
       </View>
+      <SkeletonBlock height={AVATAR_SIZE} radius={Radius.full} width={AVATAR_SIZE} />
     </View>
-  );
-}
-
-type IconButtonProps = {
-  accessibilityLabel: string;
-  icon: typeof Search;
-  onPress?: () => void;
-};
-
-function IconButton({ accessibilityLabel, icon: Icon, onPress }: IconButtonProps) {
-  return (
-    <Pressable accessibilityLabel={accessibilityLabel} accessibilityRole="button" hitSlop={Spacing.two} onPress={onPress} style={styles.iconButton}>
-      <Icon color={Colors.textPrimary} size={24} />
-    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     backgroundColor: Colors.background,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.three,
-    paddingBottom: Spacing.three,
+    gap: Spacing.three,
   },
-  identity: { alignItems: 'center', flexDirection: 'row', gap: Spacing.two },
-  greeting: { color: Colors.textSecondary, fontFamily: Fonts.sans, ...Typography.caption },
-  name: { color: Colors.textPrimary, fontFamily: Fonts.sans, ...Typography.bodyLarge, fontWeight: Typography.weights.semibold },
-  actions: { alignItems: 'center', flexDirection: 'row', gap: Spacing.two },
-  iconButton: { alignItems: 'center', height: 32, justifyContent: 'center', width: 32 },
-  notificationDot: { backgroundColor: Colors.danger, borderColor: Colors.background, borderRadius: Radius.full, borderWidth: 2, height: 10, position: 'absolute', right: 1, top: 1, width: 10 },
-  skeletonCopy: { gap: Spacing.one },
+  loadingContainer: {
+    alignItems: 'flex-start',
+    flex: 1,
+    flexDirection: 'row',
+    gap: Spacing.three,
+  },
+  profileAction: {
+    alignItems: 'center',
+    borderRadius: Radius.full,
+    height: PROFILE_ACTION_SIZE,
+    justifyContent: 'center',
+    width: PROFILE_ACTION_SIZE,
+  },
+  profileActionPressed: {
+    backgroundColor: Colors.surface,
+  },
+  skeletonCopy: {
+    flex: 1,
+    gap: Spacing.two,
+  },
 });

@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -14,18 +15,22 @@ import { Fonts, Radius, Spacing, brandColors } from '@/constants/theme';
 import { useLogin } from '@/hooks/useLogin';
 
 export function LoginScreen() {
+  const router = useRouter();
+  const { registered } = useLocalSearchParams<{ registered?: string }>();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const { loading, error, login } = useLogin();
 
   const handleLogin = useCallback(async () => {
     try {
-      const response = await login(username.trim(), password);
-      console.log('Login response:', response);
+      await login(username.trim(), password);
     } catch {
       // useLogin owns the user-facing error message shown below the button.
     }
   }, [login, password, username]);
+  const handleRegister = useCallback(() => {
+    router.push('/register');
+  }, [router]);
 
   return (
     <KeyboardAvoidingView
@@ -39,6 +44,11 @@ export function LoginScreen() {
         </View>
 
         <View style={styles.form}>
+          {registered === 'true' ? (
+            <Text accessibilityRole="alert" style={styles.successText}>
+              Account created. You can now log in.
+            </Text>
+          ) : null}
           <View style={styles.field}>
             <Text style={styles.label}>Username</Text>
             <TextInput
@@ -86,6 +96,17 @@ export function LoginScreen() {
           </Pressable>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+          <View style={styles.registerRow}>
+            <Text style={styles.registerCopy}>New to SajiloHealth?</Text>
+            <Pressable
+              accessibilityRole="link"
+              hitSlop={Spacing.two}
+              onPress={handleRegister}
+            >
+              <Text style={styles.registerLink}>Create account</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -184,5 +205,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0,
     lineHeight: 20,
+  },
+  successText: {
+    color: brandColors.primaryMuted,
+    fontFamily: Fonts.sans,
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 20,
+  },
+  registerRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+    justifyContent: 'center',
+    minHeight: Spacing.five + Spacing.twoHalf,
+  },
+  registerCopy: {
+    color: brandColors.slate,
+    fontFamily: Fonts.sans,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  registerLink: {
+    color: brandColors.primary,
+    fontFamily: Fonts.sans,
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

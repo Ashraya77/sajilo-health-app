@@ -64,14 +64,14 @@ export function AuthSessionProvider({ children }: PropsWithChildren) {
     }
 
     const currentRoute = segments[0];
-    const isLoginRoute = currentRoute === 'login';
+    const isAuthRoute = currentRoute === 'login' || currentRoute === 'register';
 
-    if (status === 'unauthenticated' && !isLoginRoute) {
+    if (status === 'unauthenticated' && !isAuthRoute) {
       router.replace('/login');
       return;
     }
 
-    if (status === 'authenticated' && isLoginRoute) {
+    if (status === 'authenticated' && isAuthRoute) {
       router.replace('/');
     }
   }, [segments, status]);

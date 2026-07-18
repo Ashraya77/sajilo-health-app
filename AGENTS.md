@@ -22,6 +22,20 @@ The app is SajiloHealth. Maintain a consistent, healthcare-focused interface acr
 4. Do not introduce new libraries unless the benefit is clear and explained.
 5. Keep UI, business logic, and infrastructure concerns separated.
 6. Maintain color, spacing, typography, and interaction consistency across all pages.
+## UI Prototype Mode
+
+When a task explicitly states that it is a UI-only prototype:
+
+* Missing APIs or navigation routes must not block visual implementation.
+* Use isolated typed fixtures rather than inventing production data flows.
+* Use temporary named handlers rather than creating fake routes.
+* Every visible interactive control must still receive a placeholder callback.
+* Clearly mark future integration points with concise TODOs.
+* Keep prototype mappings and fixtures outside production services.
+* Do not represent prototype functionality as production-ready.
+* Report all mocked data, temporary handlers, and unresolved integration requirements after implementation.
+
+These exceptions apply only when the task explicitly authorizes UI Prototype Mode.
 
 ## Brand Colors
 

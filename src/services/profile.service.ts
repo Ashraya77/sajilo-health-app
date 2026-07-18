@@ -1,11 +1,22 @@
 import { apiClient } from '@/api/apiClient';
+import {
+  normalizeApiCollection,
+  unwrapApiResponse,
+  type ApiCollection,
+  type ApiResponse,
+} from '@/api/apiResponse';
 import { ENDPOINTS } from '@/api/endpoints';
-import type { ApiPatientProfile, ApiUser, UpdatePatientProfileDto } from '@/types/profile';
+import type {
+  ApiPatientProfile,
+  ApiUser,
+  ApiUserContext,
+  UpdatePatientProfileDto,
+} from '@/types/profile';
 
 /** Retrieves the currently authenticated account. */
 export async function getMe(): Promise<ApiUser> {
-  const { data } = await apiClient.get<ApiUser>(ENDPOINTS.ME);
-  return data;
+  const { data } = await apiClient.get<ApiResponse<ApiUser>>(ENDPOINTS.ME);
+  return unwrapApiResponse(data);
 }
 
 /** Retrieves the authenticated patient's profile details. */
@@ -21,7 +32,9 @@ export async function updatePatientProfile(data: UpdatePatientProfileDto): Promi
 }
 
 /** Retrieves the roles and contexts available to the authenticated account. */
-export async function getUserContexts(): Promise<unknown> {
-  const { data } = await apiClient.get<unknown>(ENDPOINTS.USER_CONTEXTS);
-  return data;
+export async function getUserContexts(): Promise<ApiUserContext[]> {
+  const { data } = await apiClient.get<ApiResponse<ApiCollection<ApiUserContext>>>(
+    ENDPOINTS.USER_CONTEXTS,
+  );
+  return normalizeApiCollection(unwrapApiResponse(data));
 }

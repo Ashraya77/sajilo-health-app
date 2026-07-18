@@ -6,15 +6,13 @@ import {
   getPatientProfile,
 } from '@/services/profile.service';
 import { getDevices } from '@/services/device.service';
-import { getMemberships } from '@/services/membership.service';
-import { getPatientChart } from '@/services/chart.service';
 import type { ApiPatientProfile, ProfileDashboard } from '@/types/profile';
 
 const profileDashboardKey = ['profile-dashboard'] as const;
 
 async function fetchProfileDashboard(): Promise<ProfileDashboard> {
-  const [meResult, profileResult, chartResult, membershipsResult, devicesResult] = await Promise.allSettled([
-    getMe(), getPatientProfile(), getPatientChart(), getMemberships(), getDevices(),
+  const [meResult, profileResult, devicesResult] = await Promise.allSettled([
+    getMe(), getPatientProfile(), getDevices(),
   ]);
   if (meResult.status === 'rejected') {
     throw meResult.reason;
@@ -22,8 +20,6 @@ async function fetchProfileDashboard(): Promise<ProfileDashboard> {
 
   const me = meResult.value;
   const profile: ApiPatientProfile = profileResult.status === 'fulfilled' ? profileResult.value : {};
-  const chart = chartResult.status === 'fulfilled' ? chartResult.value : undefined;
-  const memberships = membershipsResult.status === 'fulfilled' ? membershipsResult.value : undefined;
   const devices = devicesResult.status === 'fulfilled' ? devicesResult.value : undefined;
   const fullName = me.full_name ?? profile.full_name;
   const nameFromParts = [me.first_name, me.last_name].filter(Boolean).join(' ');
@@ -48,8 +44,10 @@ async function fetchProfileDashboard(): Promise<ProfileDashboard> {
     appointmentsCount: 0,
     prescriptionsCount: 0,
     reportsCount: 0,
-    doctorsVisitedCount: collectionCount(chart),
-    membershipsCount: collectionCount(memberships),
+    // Clinic chart data must wait for an explicit selected clinic context.
+    doctorsVisitedCount: 0,
+    // No membership request is made until the app owns a selected clinic context.
+    membershipsCount: 0,
     consentsCount: 0,
     devicesCount: collectionCount(devices),
   };

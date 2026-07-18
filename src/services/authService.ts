@@ -1,4 +1,5 @@
 import { apiClient } from '@/api/apiClient';
+import { unwrapApiResponse, type ApiResponse } from '@/api/apiResponse';
 import { ENDPOINTS } from '@/api/endpoints';
 import { saveAuthTokens, type AuthTokens } from '@/services/tokenStorage';
 
@@ -10,6 +11,21 @@ export interface LoginRequest {
 export interface LoginResponse {
   [key: string]: unknown;
 }
+
+export type RegisterPatientRequest = {
+  username: string;
+  email: string;
+  phone: string;
+  password: string;
+  full_name: string;
+};
+
+export type RegisterPatientResponse = {
+  username?: string;
+  email?: string;
+  phone?: string | null;
+  full_name?: string | null;
+};
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -77,4 +93,16 @@ export async function login(username: string, password: string): Promise<LoginRe
   await saveAuthTokens(tokens);
 
   return response.data;
+}
+
+/** Creates a patient account. Registration does not imply authentication. */
+export async function registerPatient(
+  payload: RegisterPatientRequest,
+): Promise<RegisterPatientResponse> {
+  const { data } = await apiClient.post<ApiResponse<RegisterPatientResponse>>(
+    ENDPOINTS.REGISTER_PATIENT,
+    payload,
+  );
+
+  return unwrapApiResponse(data);
 }

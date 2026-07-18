@@ -13,6 +13,7 @@ import {
 
 import { brandColors } from '@/constants/theme';
 import { AuthSessionProvider } from '@/hooks/useAuthSession';
+import { ClinicWorkspaceProvider } from '@/hooks/useClinicWorkspace';
 import { SplashScreen as StartupSplashScreen } from '@/screens/SplashScreen';
 
 void SplashScreen.preventAutoHideAsync();
@@ -102,6 +103,7 @@ export default function TabLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <AuthSessionProvider>
+      <ClinicWorkspaceProvider>
       <QueryClientProvider client={queryClient}>
         <Tabs
           screenOptions={{
@@ -138,6 +140,7 @@ export default function TabLayout() {
               ),
             }}
           />
+          <Tabs.Screen name="register" options={{ href: null, title: 'Register' }} />
           <Tabs.Screen
             name="profile"
             options={{
@@ -147,6 +150,11 @@ export default function TabLayout() {
               ),
             }}
           />
+          <Tabs.Screen name="search" options={{ href: null }} />
+          <Tabs.Screen name="clinics" options={{ href: null }} />
+          <Tabs.Screen name="appointments" options={{ href: null }} />
+          <Tabs.Screen name="prescriptions" options={{ href: null }} />
+          <Tabs.Screen name="diagnostics" options={{ href: null }} />
         </Tabs>
         {showStartupSplash && (
           <View style={[StyleSheet.absoluteFill, styles.startupSplash]}>
@@ -154,6 +162,7 @@ export default function TabLayout() {
           </View>
         )}
       </QueryClientProvider>
+      </ClinicWorkspaceProvider>
       </AuthSessionProvider>
     </ThemeProvider>
   );

@@ -2,14 +2,29 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Colors, Fonts, Spacing, Typography } from '@/constants/theme';
 
-type SectionHeaderProps = { title: string; onSeeAllPress?: () => void; seeAllLabel?: string };
+type SectionHeaderProps = {
+  title: string;
+  onSeeAllPress?: () => void;
+  seeAllLabel?: string;
+  seeAllAccessibilityLabel?: string;
+};
 
-export function SectionHeader({ title, onSeeAllPress, seeAllLabel = 'See all' }: SectionHeaderProps) {
+export function SectionHeader({
+  title,
+  onSeeAllPress,
+  seeAllLabel = 'See all',
+  seeAllAccessibilityLabel,
+}: SectionHeaderProps) {
   return (
     <View style={styles.row}>
       <Text style={styles.title}>{title}</Text>
       {onSeeAllPress && (
-        <Pressable accessibilityRole="button" hitSlop={Spacing.two} onPress={onSeeAllPress}>
+        <Pressable
+          accessibilityLabel={seeAllAccessibilityLabel}
+          accessibilityRole="button"
+          hitSlop={Spacing.two}
+          onPress={onSeeAllPress}
+        >
           <Text style={styles.link}>{seeAllLabel}</Text>
         </Pressable>
       )}

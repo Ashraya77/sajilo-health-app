@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { getUpcomingAppointments } from '@/services/home.service';
+import { getUpcomingAppointments } from '@/services/appointment.service';
 import type { ApiAppointment } from '@/types/home';
 
 const upcomingAppointmentsKey = ['home-upcoming-appointments'] as const;

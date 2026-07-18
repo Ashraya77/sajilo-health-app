@@ -2,12 +2,25 @@ import type { LucideIcon } from 'lucide-react-native';
 
 export type AppointmentItem = {
   kind: 'appointment';
+  id?: string;
   doctorName: string;
   specialty?: string;
   clinicName: string;
   avatarUri?: string;
   dateTime: Date;
   status: 'confirmed' | 'pending';
+};
+
+export type UpcomingAppointmentItem = {
+  id?: string;
+  doctorId?: string;
+  patientId?: string;
+  startAt: Date;
+  endAt?: Date;
+  status?: string;
+  visitType?: string;
+  channel?: string;
+  reason?: string;
 };
 
 export type MedicationItem = {
@@ -48,27 +61,74 @@ export type CardEyebrowConfig = {
   label: string;
 };
 
+export type HomeDiscoverySectionKey =
+  | 'personalized'
+  | 'sponsored'
+  | 'patients_choice'
+  | 'certified_plus'
+  | 'others';
+
+export type HomeDiscoveryFilters = {
+  city?: string;
+  area?: string;
+  specialty?: string;
+  type?: string;
+  limit?: number;
+};
+
+export type ApiHomeDiscoveryListing = {
+  id: string;
+  type?: string;
+  title: string;
+  specialization?: string;
+  city?: string;
+  area?: string;
+  rating_avg?: number;
+  rating_count?: number;
+  next_available_at?: string;
+  badges?: unknown;
+};
+
+export type HomeDiscoveryResponse = Partial<
+  Record<HomeDiscoverySectionKey, readonly ApiHomeDiscoveryListing[]>
+>;
+
+export type HomeDiscoveryListing = {
+  id: string;
+  type?: string;
+  title: string;
+  specialty?: string;
+  city?: string;
+  area?: string;
+  ratingAverage?: number;
+  ratingCount?: number;
+  nextAvailableAt?: string;
+  badge?: string;
+};
+
+export type CuratedHomeDiscoverySection = {
+  id: 'recommended' | 'nearby' | 'patients-choice' | 'sponsored';
+  title: string;
+  listings: readonly HomeDiscoveryListing[];
+  isSponsored: boolean;
+};
+
 // ---------------------------------------------------------------------------
 // API response types — raw shapes returned by the backend
 // ---------------------------------------------------------------------------
 
 export type ApiAppointment = {
   id?: string | number;
-  doctor_name?: string;
-  doctor?: string;
-  doctor_avatar?: string;
-  doctor_avatar_url?: string;
-  clinic_avatar?: string;
-  specialty?: string;
-  doctor_specialty?: string;
-  department?: string;
-  clinic_name?: string;
-  clinic?: string;
-  appointment_date?: string;
-  appointment_time?: string;
-  date_time?: string;
-  scheduled_at?: string;
+  doctor_id?: string | number;
+  patient_id?: string | number;
+  start_at?: string;
+  end_at?: string;
   status?: string;
+  visit_type?: string;
+  channel?: string;
+  reason?: string;
+  fee_amount?: string | number;
+  currency?: string;
 };
 
 export type ApiPrescription = {

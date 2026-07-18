@@ -1,51 +1,48 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { Fonts, Spacing, brandColors } from '@/constants/theme';
+import { Fonts, Spacing, Typography, brandColors } from '@/constants/theme';
 
 type HomeGreetingProps = {
   greeting: string;
-  firstName: string;
-  subtitle: string;
+  firstName?: string;
+  supportingText: string;
 };
 
-export function HomeGreeting({ greeting, firstName, subtitle }: HomeGreetingProps) {
+export function HomeGreeting({ greeting, firstName, supportingText }: HomeGreetingProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.eyebrow}>{greeting}</Text>
-      <Text style={styles.name}>{firstName}</Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
+      <Text style={styles.greeting}>{greeting}</Text>
+      <Text ellipsizeMode="tail" numberOfLines={1} style={styles.name}>
+        {firstName ?? 'Welcome'}
+      </Text>
+      <Text numberOfLines={2} style={styles.supportingText}>
+        {supportingText}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    gap: 0,
+    flex: 1,
+    gap: Spacing.one,
+    minWidth: 0,
   },
-  eyebrow: {
+  greeting: {
     color: brandColors.primaryMuted,
     fontFamily: Fonts.sans,
-    fontSize: 15,
-    fontWeight: '600',
-    letterSpacing: 0,
-    lineHeight: 20,
+    ...Typography.body,
+    fontWeight: Typography.weights.medium,
   },
   name: {
     color: brandColors.primaryDark,
     fontFamily: Fonts.rounded,
-    fontSize: 34,
-    fontWeight: '800',
-    letterSpacing: 0,
-    lineHeight: 40,
-    marginTop: Spacing.one,
+    ...Typography.heading,
+    fontWeight: Typography.weights.semibold,
   },
-  subtitle: {
+  supportingText: {
     color: brandColors.slate,
     fontFamily: Fonts.sans,
-    fontSize: 16,
-    fontWeight: '500',
-    letterSpacing: 0,
-    lineHeight: 23,
-    marginTop: Spacing.two,
+    ...Typography.bodyLarge,
   },
 });

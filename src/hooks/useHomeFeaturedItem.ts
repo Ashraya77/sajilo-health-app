@@ -3,9 +3,7 @@ import { useMemo } from 'react';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useActivePrescriptions } from '@/hooks/useActivePrescriptions';
 import { useRecentDiagnostics } from '@/hooks/useRecentDiagnostics';
-import { useUpcomingAppointments } from '@/hooks/useUpcomingAppointments';
 import type {
-  ApiAppointment,
   ApiDiagnosticReport,
   ApiPrescription,
   FeaturedItem,
@@ -15,22 +13,12 @@ import type {
  * UI-facing Home dashboard adapter. The screen consumes this single hook;
  * API-backed dashboard data stays outside the Hero components.
  */
-export function useHomeFeaturedItem() {
+export function useHomeFeaturedItem(selectedClinicId?: string) {
   const userQuery = useCurrentUser();
-  const appointmentsQuery = useUpcomingAppointments();
   const prescriptionsQuery = useActivePrescriptions();
-  const diagnosticsQuery = useRecentDiagnostics();
+  const diagnosticsQuery = useRecentDiagnostics(selectedClinicId);
 
   const item = useMemo<FeaturedItem>(() => {
-    const appointment = findSoonest(
-      getCollectionItems<ApiAppointment>(appointmentsQuery.data)
-        .map(toAppointmentItem)
-        .filter((value): value is Extract<FeaturedItem, { kind: 'appointment' }> => value !== null),
-      (value) => value.dateTime,
-    );
-
-    if (appointment) return appointment;
-
     const medication = findSoonest(
       getCollectionItems<ApiPrescription>(prescriptionsQuery.data)
         .filter((prescription) => prescription.is_active !== false)
@@ -45,7 +33,7 @@ export function useHomeFeaturedItem() {
     if (report) return report;
 
     return { kind: 'empty' };
-  }, [appointmentsQuery.data, diagnosticsQuery.data, prescriptionsQuery.data]);
+  }, [diagnosticsQuery.data, prescriptionsQuery.data]);
 
   return {
     firstName: getFirstName(userQuery.data),
@@ -53,7 +41,6 @@ export function useHomeFeaturedItem() {
     item,
     isUserLoading: userQuery.isLoading,
     isLoading: userQuery.isLoading
-      || appointmentsQuery.isLoading
       || prescriptionsQuery.isLoading
       || diagnosticsQuery.isLoading,
   };
@@ -63,51 +50,6 @@ function getFirstName(user: { first_name?: string; full_name?: string } | undefi
   if (user?.first_name?.trim()) return user.first_name.trim();
   if (user?.full_name?.trim()) return user.full_name.trim().split(/\s+/)[0] ?? 'there';
   return 'there';
-}
-
-function toAppointmentItem(
-  appointment: {
-    doctor_name?: string;
-    doctor?: string;
-    specialty?: string;
-    doctor_specialty?: string;
-    department?: string;
-    clinic_name?: string;
-    clinic?: string;
-    appointment_date?: string;
-    appointment_time?: string;
-    date_time?: string;
-    scheduled_at?: string;
-    status?: string;
-  },
-): Extract<FeaturedItem, { kind: 'appointment' }> | null {
-  const dateTime = parseAppointmentDate(appointment);
-  if (dateTime === null || dateTime.getTime() < Date.now()) return null;
-
-  return {
-    kind: 'appointment',
-    doctorName: appointment.doctor_name ?? appointment.doctor ?? 'Your care provider',
-    specialty: appointment.specialty ?? appointment.doctor_specialty ?? appointment.department,
-    clinicName: appointment.clinic_name ?? appointment.clinic ?? 'Sajilo Health',
-    dateTime,
-    status: appointment.status?.toLowerCase() === 'pending' ? 'pending' : 'confirmed',
-  };
-}
-
-function parseAppointmentDate(appointment: {
-  appointment_date?: string;
-  appointment_time?: string;
-  date_time?: string;
-  scheduled_at?: string;
-}): Date | null {
-  const value = appointment.scheduled_at ?? appointment.date_time
-    ?? (appointment.appointment_date && appointment.appointment_time
-      ? `${appointment.appointment_date}T${appointment.appointment_time}`
-      : appointment.appointment_date);
-  if (!value) return null;
-
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function toMedicationItem(prescription: ApiPrescription): Extract<FeaturedItem, { kind: 'medication' }> {

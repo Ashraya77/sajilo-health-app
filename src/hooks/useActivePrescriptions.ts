@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { getActivePrescriptions } from '@/services/home.service';
+import { getMyPrescriptions } from '@/services/prescription.service';
 import type { ApiPrescription } from '@/types/home';
 
 const activePrescriptionsKey = ['home-active-prescriptions'] as const;
@@ -9,7 +9,7 @@ const activePrescriptionsKey = ['home-active-prescriptions'] as const;
 export function useActivePrescriptions() {
   return useQuery<ApiPrescription[]>({
     queryKey: activePrescriptionsKey,
-    queryFn: getActivePrescriptions,
+    queryFn: getMyPrescriptions,
   });
 }
 

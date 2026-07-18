@@ -1,128 +1,215 @@
-import { CalendarDays, CalendarPlus } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { CalendarDays, ChevronRight, Stethoscope, UserRound } from 'lucide-react-native';
 
-import { Avatar, Badge, Card, SkeletonBlock } from '@/components';
+import { Badge } from '@/components/Badge';
+import { Card } from '@/components/Card';
 import { Colors, Fonts, Radius, Spacing, Typography } from '@/constants/theme';
-import type { AppointmentItem } from '@/types/home';
+import type { UpcomingAppointmentItem } from '@/types/home';
+
+const MIN_TOUCH_TARGET = Spacing.five + Spacing.twoHalf;
 
 type UpcomingAppointmentCardProps = {
-  appointment: AppointmentItem | null;
-  isLoading: boolean;
-  onBookAppointment?: () => void;
-  onMessage?: () => void;
-  onReschedule?: () => void;
+  appointment: UpcomingAppointmentItem;
+  isRefreshing: boolean;
+  onOpenDetails?: () => void;
 };
 
 export function UpcomingAppointmentCard({
   appointment,
-  isLoading,
-  onBookAppointment,
-  onMessage,
-  onReschedule,
+  isRefreshing,
+  onOpenDetails,
 }: UpcomingAppointmentCardProps) {
-  if (isLoading) return <AppointmentSkeleton />;
-  if (!appointment) return <EmptyAppointment onBookAppointment={onBookAppointment} />;
+  const status = getStatusPresentation(appointment.status);
+  const visitLabel = formatLabel(appointment.visitType ?? appointment.channel);
 
   return (
     <Card style={styles.card}>
       <View style={styles.topRow}>
-        <View style={styles.provider}>
-          <Avatar name={appointment.doctorName} size={40} uri={appointment.avatarUri} />
-          <View style={styles.providerCopy}>
-            <Text numberOfLines={1} style={styles.doctorName}>{appointment.doctorName}</Text>
-            <Text numberOfLines={1} style={styles.specialty}>{appointment.specialty ?? appointment.clinicName}</Text>
+        <View style={styles.identity}>
+          <View style={styles.iconMark}>
+            <CalendarDays color={Colors.primary} size={Spacing.four} />
+          </View>
+          <View style={styles.identityCopy}>
+            <Text style={styles.date}>{formatAppointmentDate(appointment.startAt)}</Text>
+            <Text style={styles.time}>{formatAppointmentTime(appointment.startAt)}</Text>
           </View>
         </View>
-        <Badge label={formatStatus(appointment.status)} variant={appointment.status === 'confirmed' ? 'success' : 'warning'} />
-      </View>
-
-      <View style={styles.divider} />
-      <View style={styles.appointmentTime}>
-        <CalendarDays color={Colors.primary} size={24} />
-        <Text style={styles.timeText}>{formatAppointmentDate(appointment.dateTime)}</Text>
-      </View>
-
-      <View style={styles.actions}>
-        <OutlineButton label="Reschedule" onPress={onReschedule} />
-        <OutlineButton label="Message" onPress={onMessage} />
-      </View>
-    </Card>
-  );
-}
-
-function AppointmentSkeleton() {
-  return (
-    <Card style={styles.card}>
-      <View style={styles.skeletonProvider}>
-        <SkeletonBlock height={40} radius={Radius.full} width={40} />
-        <View style={styles.skeletonCopy}>
-          <SkeletonBlock height={16} width={144} />
-          <SkeletonBlock height={12} width={104} />
+        <View style={styles.statusArea}>
+          {isRefreshing && (
+            <ActivityIndicator
+              accessibilityLabel="Refreshing appointment"
+              color={Colors.primary}
+              size="small"
+            />
+          )}
+          <Badge label={status.label} variant={status.variant} />
         </View>
       </View>
-      <View style={styles.divider} />
-      <SkeletonBlock height={28} width="78%" />
-      <View style={styles.actions}>
-        <SkeletonBlock height={44} radius={Radius.md} width="48%" />
-        <SkeletonBlock height={44} radius={Radius.md} width="48%" />
+
+      <View style={styles.details}>
+        {appointment.doctorId && (
+          <DetailRow
+            icon={UserRound}
+            label={`Doctor reference: ${appointment.doctorId}`}
+          />
+        )}
+        {visitLabel && <DetailRow icon={Stethoscope} label={visitLabel} />}
+        {appointment.reason && (
+          <Text numberOfLines={2} style={styles.reason}>{appointment.reason}</Text>
+        )}
       </View>
+
+      {onOpenDetails && (
+        <Pressable
+          accessibilityLabel="Open appointment details"
+          accessibilityRole="button"
+          onPress={onOpenDetails}
+          style={({ pressed }) => [styles.detailsAction, pressed && styles.actionPressed]}
+        >
+          <Text style={styles.detailsActionLabel}>View details</Text>
+          <ChevronRight color={Colors.primary} size={Spacing.three} />
+        </Pressable>
+      )}
     </Card>
   );
 }
 
-function EmptyAppointment({ onBookAppointment }: Pick<UpcomingAppointmentCardProps, 'onBookAppointment'>) {
+type DetailRowProps = {
+  icon: typeof UserRound;
+  label: string;
+};
+
+function DetailRow({ icon: Icon, label }: DetailRowProps) {
   return (
-    <Card style={[styles.card, styles.emptyCard]}>
-      <CalendarPlus color={Colors.primary} size={28} />
-      <Text style={styles.emptyText}>No upcoming appointments</Text>
-      <Pressable accessibilityRole="button" onPress={onBookAppointment} style={styles.primaryButton}>
-        <Text style={styles.primaryButtonLabel}>Book Appointment</Text>
-      </Pressable>
-    </Card>
+    <View style={styles.detailRow}>
+      <Icon color={Colors.textSecondary} size={Spacing.three} />
+      <Text numberOfLines={1} style={styles.detailText}>{label}</Text>
+    </View>
   );
 }
 
-function OutlineButton({ label, onPress }: { label: string; onPress?: () => void }) {
-  return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.outlineButton, pressed && styles.buttonPressed]}>
-      <Text style={styles.outlineButtonLabel}>{label}</Text>
-    </Pressable>
-  );
+function getStatusPresentation(status: string | undefined): {
+  label: string;
+  variant: 'success' | 'warning' | 'neutral';
+} {
+  if (status === 'confirmed') return { label: 'Confirmed', variant: 'success' };
+  if (status === 'pending') return { label: 'Pending', variant: 'warning' };
+  return {
+    label: formatLabel(status) ?? 'Status unavailable',
+    variant: 'neutral',
+  };
 }
 
-function formatStatus(status: AppointmentItem['status']): string {
-  return status === 'confirmed' ? 'Confirmed' : 'Pending';
+function formatLabel(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const label = value.replace(/[_-]+/g, ' ').trim();
+  return label ? label.replace(/^\w/, (character) => character.toUpperCase()) : undefined;
 }
 
 function formatAppointmentDate(date: Date): string {
   const today = new Date();
-  const tomorrow = new Date();
+  const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
-  const time = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
-  if (date.toDateString() === today.toDateString()) return `Today at ${time}`;
-  if (date.toDateString() === tomorrow.toDateString()) return `Tomorrow at ${time}`;
-  return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  if (date.toDateString() === today.toDateString()) return 'Today';
+  if (date.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
+
+  return date.toLocaleDateString([], {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function formatAppointmentTime(date: Date): string {
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
 const styles = StyleSheet.create({
-  card: { marginVertical: Spacing.four },
-  topRow: { alignItems: 'flex-start', flexDirection: 'row', justifyContent: 'space-between' },
-  provider: { alignItems: 'center', flex: 1, flexDirection: 'row', gap: Spacing.two, paddingRight: Spacing.two },
-  providerCopy: { flex: 1, gap: Spacing.half },
-  doctorName: { color: Colors.textPrimary, fontFamily: Fonts.sans, ...Typography.bodyLarge, fontWeight: Typography.weights.semibold },
-  specialty: { color: Colors.textSecondary, fontFamily: Fonts.sans, ...Typography.caption },
-  divider: { backgroundColor: Colors.border, height: 1, marginVertical: Spacing.three },
-  appointmentTime: { alignItems: 'center', flexDirection: 'row', gap: Spacing.two },
-  timeText: { color: Colors.textPrimary, flex: 1, fontFamily: Fonts.sans, ...Typography.heading },
-  actions: { flexDirection: 'row', gap: Spacing.two, marginTop: Spacing.three },
-  outlineButton: { alignItems: 'center', borderColor: Colors.border, borderRadius: Radius.md, borderWidth: 1, flex: 1, justifyContent: 'center', minHeight: 44 },
-  outlineButtonLabel: { color: Colors.primary, fontFamily: Fonts.sans, ...Typography.body, fontWeight: Typography.weights.medium },
-  buttonPressed: { backgroundColor: Colors.infoSurface },
-  emptyCard: { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.four },
-  emptyText: { color: Colors.textSecondary, fontFamily: Fonts.sans, ...Typography.bodyLarge },
-  primaryButton: { alignItems: 'center', backgroundColor: Colors.primary, borderRadius: Radius.md, justifyContent: 'center', marginTop: Spacing.one, minHeight: 44, paddingHorizontal: Spacing.four },
-  primaryButtonLabel: { color: Colors.background, fontFamily: Fonts.sans, ...Typography.body, fontWeight: Typography.weights.semibold },
-  skeletonProvider: { alignItems: 'center', flexDirection: 'row', gap: Spacing.two },
-  skeletonCopy: { gap: Spacing.one },
+  card: {
+    gap: Spacing.three,
+  },
+  topRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    gap: Spacing.two,
+    justifyContent: 'space-between',
+  },
+  identity: {
+    alignItems: 'center',
+    flex: 1,
+    flexDirection: 'row',
+    gap: Spacing.twoHalf,
+    minWidth: 0,
+  },
+  iconMark: {
+    alignItems: 'center',
+    backgroundColor: Colors.infoSurface,
+    borderRadius: Radius.full,
+    height: Spacing.five + Spacing.two,
+    justifyContent: 'center',
+    width: Spacing.five + Spacing.two,
+  },
+  identityCopy: {
+    flex: 1,
+    gap: Spacing.half,
+    minWidth: 0,
+  },
+  date: {
+    color: Colors.textPrimary,
+    fontFamily: Fonts.rounded,
+    ...Typography.title,
+  },
+  time: {
+    color: Colors.textSecondary,
+    fontFamily: Fonts.sans,
+    ...Typography.body,
+  },
+  statusArea: {
+    alignItems: 'flex-end',
+    gap: Spacing.one,
+  },
+  details: {
+    gap: Spacing.two,
+  },
+  detailRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: Spacing.two,
+  },
+  detailText: {
+    color: Colors.textSecondary,
+    flex: 1,
+    fontFamily: Fonts.sans,
+    ...Typography.body,
+  },
+  reason: {
+    color: Colors.textPrimary,
+    fontFamily: Fonts.sans,
+    ...Typography.body,
+  },
+  detailsAction: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    gap: Spacing.one,
+    justifyContent: 'center',
+    minHeight: MIN_TOUCH_TARGET,
+    paddingRight: Spacing.three,
+  },
+  detailsActionLabel: {
+    color: Colors.primary,
+    fontFamily: Fonts.sans,
+    ...Typography.body,
+    fontWeight: Typography.weights.semibold,
+  },
+  actionPressed: {
+    opacity: 0.7,
+  },
 });

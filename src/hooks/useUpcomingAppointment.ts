@@ -1,57 +1,81 @@
-import { useMemo } from 'react';
-
 import { useUpcomingAppointments } from '@/hooks/useUpcomingAppointments';
-import type { ApiAppointment, AppointmentItem } from '@/types/home';
+import type { ApiAppointment, UpcomingAppointmentItem } from '@/types/home';
+
+export type UpcomingAppointmentViewState =
+  | { status: 'loading'; appointment: null }
+  | { status: 'error'; appointment: null; message: string }
+  | { status: 'empty'; appointment: null }
+  | { status: 'populated'; appointment: UpcomingAppointmentItem };
 
 /** Returns the patient's next future appointment for the Home focal card. */
 export function useUpcomingAppointment() {
   const query = useUpcomingAppointments();
-  const appointment = useMemo(() => findSoonest(getCollectionItems<ApiAppointment>(query.data)), [query.data]);
+  const appointment = selectUpcomingAppointment(query.data ?? []);
+  const state: UpcomingAppointmentViewState = appointment
+    ? { status: 'populated', appointment }
+    : query.isPending
+      ? { status: 'loading', appointment: null }
+      : query.isError
+        ? {
+            status: 'error',
+            appointment: null,
+            message: 'We couldn’t load your upcoming appointment.',
+          }
+        : { status: 'empty', appointment: null };
 
-  return { appointment, isLoading: query.isLoading };
+  return {
+    state,
+    isRefetching: query.isRefetching,
+    refresh: query.refetch,
+  };
 }
 
-function findSoonest(appointments: ApiAppointment[]): AppointmentItem | null {
-  return appointments.reduce<AppointmentItem | null>((soonest, appointment) => {
+export function selectUpcomingAppointment(
+  appointments: readonly ApiAppointment[],
+  now = Date.now(),
+): UpcomingAppointmentItem | null {
+  return appointments.reduce<UpcomingAppointmentItem | null>((soonest, appointment) => {
     const item = toAppointmentItem(appointment);
-    if (!item || (soonest && item.dateTime.getTime() >= soonest.dateTime.getTime())) return soonest;
+    if (!item || item.startAt.getTime() <= now) return soonest;
+    if (soonest && item.startAt.getTime() >= soonest.startAt.getTime()) return soonest;
     return item;
   }, null);
 }
 
-function toAppointmentItem(appointment: ApiAppointment): AppointmentItem | null {
-  const dateTime = parseDateTime(appointment);
-  if (!dateTime || dateTime.getTime() < Date.now()) return null;
+function toAppointmentItem(appointment: ApiAppointment): UpcomingAppointmentItem | null {
+  const startAt = parseDate(appointment.start_at);
+  if (!startAt) return null;
 
   return {
-    kind: 'appointment',
-    doctorName: appointment.doctor_name ?? appointment.doctor ?? 'Your care provider',
-    specialty: appointment.specialty ?? appointment.doctor_specialty ?? appointment.department,
-    clinicName: appointment.clinic_name ?? appointment.clinic ?? 'Sajilo Health',
-    avatarUri: appointment.doctor_avatar_url ?? appointment.doctor_avatar ?? appointment.clinic_avatar,
-    dateTime,
-    status: appointment.status?.toLowerCase() === 'pending' ? 'pending' : 'confirmed',
+    id: normalizeId(appointment.id),
+    doctorId: normalizeId(appointment.doctor_id),
+    patientId: normalizeId(appointment.patient_id),
+    startAt,
+    endAt: parseDate(appointment.end_at) ?? undefined,
+    status: normalizeText(appointment.status)?.toLowerCase(),
+    visitType: normalizeText(appointment.visit_type),
+    channel: normalizeText(appointment.channel),
+    reason: getConciseReason(appointment.reason),
   };
 }
 
-function parseDateTime(appointment: ApiAppointment): Date | null {
-  const value = appointment.scheduled_at ?? appointment.date_time
-    ?? (appointment.appointment_date && appointment.appointment_time
-      ? `${appointment.appointment_date}T${appointment.appointment_time}`
-      : appointment.appointment_date);
+function parseDate(value: string | undefined): Date | null {
   if (!value) return null;
 
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function getCollectionItems<T>(value: unknown): T[] {
-  if (Array.isArray(value)) return value as T[];
-  if (!value || typeof value !== 'object') return [];
+function normalizeId(value: string | number | undefined): string | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  return normalizeText(value);
+}
 
-  const source = value as Record<string, unknown>;
-  for (const key of ['results', 'items', 'data']) {
-    if (Array.isArray(source[key])) return source[key] as T[];
-  }
-  return [];
+function normalizeText(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function getConciseReason(value: string | undefined): string | undefined {
+  const reason = normalizeText(value);
+  return reason && reason.length <= 120 ? reason : undefined;
 }

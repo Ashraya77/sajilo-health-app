@@ -36,6 +36,9 @@ export type ApiUser = {
   photo?: string;
 };
 
+/** Account-context fields remain opaque until the backend contract defines their serializer shape. */
+export type ApiUserContext = Readonly<Record<string, unknown>>;
+
 export type ApiPatientProfile = {
   full_name?: string;
   name?: string;

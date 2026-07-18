@@ -40,6 +40,7 @@ let refreshPromise: Promise<string | null> | null = null;
 
 const AUTH_EXEMPT_ENDPOINTS: ReadonlySet<string> = new Set([
   ENDPOINTS.LOGIN,
+  ENDPOINTS.REGISTER_PATIENT,
   ENDPOINTS.REFRESH_TOKEN,
 ]);
 
