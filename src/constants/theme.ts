@@ -17,6 +17,24 @@ export const brandColors = {
   white: '#FFFFFF',
 } as const;
 
+/** Shared semantic tokens for all product UI. */
+export const Colors = {
+  primary: brandColors.primary,
+  background: brandColors.white,
+  surface: '#F7F9FA',
+  textPrimary: '#1A1A1A',
+  textSecondary: '#6B7280',
+  border: '#E5E7EB',
+  success: '#237A57',
+  warning: '#A96810',
+  danger: '#C2465C',
+  info: brandColors.primary,
+  successSurface: '#E7F5EE',
+  warningSurface: '#FFF4DE',
+  dangerSurface: '#FDECEF',
+  infoSurface: brandColors.surfaceBlue,
+} as const;
+
 export const splashColors = {
   background: brandColors.white,
   primaryDark: '#1D2D5C',
@@ -71,6 +89,7 @@ export const Spacing = {
   half: 2,
   one: 4,
   two: 8,
+  twoHalf: 12,
   three: 16,
   four: 24,
   five: 32,
@@ -79,9 +98,22 @@ export const Spacing = {
 
 export const Radius = {
   small: 8,
+  sm: 8,
+  md: 12,
+  lg: 16,
   medium: 16,
   large: 28,
+  full: 999,
   pill: 999,
+} as const;
+
+export const Typography = {
+  caption: { fontSize: 12, lineHeight: 16, fontWeight: '400' },
+  body: { fontSize: 14, lineHeight: 20, fontWeight: '400' },
+  bodyLarge: { fontSize: 16, lineHeight: 24, fontWeight: '400' },
+  title: { fontSize: 18, lineHeight: 24, fontWeight: '600' },
+  heading: { fontSize: 22, lineHeight: 28, fontWeight: '600' },
+  weights: { regular: '400', medium: '500', semibold: '600' },
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;

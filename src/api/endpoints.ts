@@ -11,5 +11,6 @@ export const ENDPOINTS = {
   MEMBERSHIPS: '/v1/clinics/clinic/patient/memberships/',
   PATIENT_CHART: '/v1/clinics/clinic/patient/chart/',
   DIAGNOSTICS: '/v1/clinics/clinic/patient/diagnostics/',
+  APPOINTMENTS: '/v1/clinics/clinic/patient/appointments/',
   PRESCRIPTIONS: '/v1/my/prescriptions/',
 } as const;

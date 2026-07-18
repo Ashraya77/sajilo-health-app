@@ -31,6 +31,9 @@ export type ApiUser = {
   last_name?: string;
   email?: string;
   phone?: string;
+  avatar?: string;
+  avatar_url?: string;
+  photo?: string;
 };
 
 export type ApiPatientProfile = {
