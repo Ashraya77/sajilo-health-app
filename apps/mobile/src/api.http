@@ -1,0 +1,415 @@
+### Ramailo Pokhara API seed file
+### Compatible with the VS Code REST Client extension / JetBrains HTTP Client.
+### IMPORTANT: This creates DEMO content. Review/edit it before using it as real news.
+### Run requests from top to bottom. Category creation is intended for a fresh database.
+
+@baseUrl = http://localhost:3000
+@adminEmail = admin@example.com
+@adminPassword = CHANGE_ME
+
+### 1) Health check
+GET {{baseUrl}}/
+
+### 2) Get NextAuth CSRF token
+# @name csrf
+GET {{baseUrl}}/api/auth/csrf
+Accept: application/json
+
+### 3) Sign in as admin
+### REST Client normally keeps the session cookie for subsequent requests.
+# @name login
+POST {{baseUrl}}/api/auth/callback/credentials
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+csrfToken={{csrf.response.body.$.csrfToken}}&email={{adminEmail}}&password={{adminPassword}}&callbackUrl={{baseUrl}}/admin&redirect=false&json=true
+
+### 4) Confirm authenticated session
+GET {{baseUrl}}/api/auth/session
+Accept: application/json
+
+###############################################################################
+# CATEGORIES — run once on a fresh database
+###############################################################################
+
+### Local
+# @name categoryLocal
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Local",
+  "slug": "local",
+  "description": "News and updates from Pokhara and surrounding communities.",
+  "color": "#C2413A",
+  "isActive": true,
+  "sortOrder": 1
+}
+
+### Tourism
+# @name categoryTourism
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Tourism",
+  "slug": "tourism",
+  "description": "Travel, hospitality and tourism developments in the Pokhara region.",
+  "color": "#0F766E",
+  "isActive": true,
+  "sortOrder": 2
+}
+
+### Business
+# @name categoryBusiness
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Business",
+  "slug": "business",
+  "description": "Local economy, markets, entrepreneurship and business stories.",
+  "color": "#A16207",
+  "isActive": true,
+  "sortOrder": 3
+}
+
+### Sports
+# @name categorySports
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Sports",
+  "slug": "sports",
+  "description": "Football, cricket, adventure sports and community competitions.",
+  "color": "#1D4ED8",
+  "isActive": true,
+  "sortOrder": 4
+}
+
+### Culture
+# @name categoryCulture
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Culture",
+  "slug": "culture",
+  "description": "Arts, festivals, heritage, music and community life.",
+  "color": "#7E22CE",
+  "isActive": true,
+  "sortOrder": 5
+}
+
+### Technology
+# @name categoryTechnology
+POST {{baseUrl}}/api/categories
+Content-Type: application/json
+Accept: application/json
+
+{
+  "name": "Technology",
+  "slug": "technology",
+  "description": "Digital services, startups, innovation and technology education.",
+  "color": "#0369A1",
+  "isActive": true,
+  "sortOrder": 6
+}
+
+###############################################################################
+# ARTICLES — realistic DEMO content for UI testing
+###############################################################################
+
+### 1. Featured + breaking lead story
+POST {{baseUrl}}/api/articles
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Pokhara Begins New Lakeside Traffic Management Trial",
+  "slug": "pokhara-lakeside-traffic-management-trial",
+  "excerpt": "A new traffic-management trial is being introduced around busy Lakeside corridors to improve pedestrian movement and reduce congestion.",
+  "content": "<p><strong>This is demonstration content for the news portal.</strong></p><p>Pokhara has begun a new traffic-management trial around key Lakeside corridors. The plan focuses on smoother vehicle flow, safer pedestrian crossings and clearer loading zones for local businesses.</p><h2>What is changing?</h2><p>Traffic personnel will test revised one-way sections, designated pickup areas and improved signage during peak hours.</p><blockquote>Officials say feedback from residents, visitors and businesses will be reviewed before permanent decisions are made.</blockquote><h2>What happens next?</h2><p>The trial will be monitored over the coming weeks. Road users are encouraged to follow temporary signs and allow additional travel time.</p>",
+  "categoryId": "{{categoryLocal.response.body.$.data.id}}",
+  "status": "PUBLISHED",
+  "isFeatured": true,
+  "isBreaking": true,
+  "featuredImageAlt": "Traffic moving through the Lakeside area of Pokhara",
+  "metaTitle": "Pokhara Starts Lakeside Traffic Trial",
+  "metaDescription": "Pokhara begins a traffic-management trial around Lakeside to improve movement, pedestrian safety and congestion control."
+}
+
+### 2. Featured tourism story
+POST {{baseUrl}}/api/articles
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Tourism Businesses Prepare for a Strong Autumn Season",
+  "slug": "pokhara-tourism-businesses-autumn-season",
+  "excerpt": "Hotels, trekking agencies and restaurants are preparing new packages and services ahead of the autumn travel season.",
+  "content": "<p><strong>This is demonstration content for the news portal.</strong></p><p>Tourism businesses across Pokhara are preparing for the autumn travel season with refreshed rooms, new trekking packages and expanded local experiences.</p><h2>Focus on visitor experience</h2><p>Operators say travellers increasingly expect flexible bookings, reliable digital information and experiences connected to local culture.</p><ul><li>Updated trekking packages</li><li>Improved online booking</li><li>More local food and culture experiences</li></ul><p>Businesses are also coordinating with transport providers to make arrivals and onward travel easier.</p>",
+  "categoryId": "{{categoryTourism.response.body.$.data.id}}",
+  "status": "PUBLISHED",
+  "isFeatured": true,
+  "isBreaking": false,
+  "featuredImageAlt": "Visitors enjoying a view of Pokhara",
+  "metaTitle": "Pokhara Tourism Prepares for Autumn",
+  "metaDescription": "Pokhara tourism businesses prepare hotels, trekking services and local experiences for the autumn travel season."
+}
+
+### 3. Business story
+POST {{baseUrl}}/api/articles
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Local Entrepreneurs Expand Digital Payment Options",
+  "slug": "pokhara-entrepreneurs-expand-digital-payments",
+  "excerpt": "More small businesses are adding QR payments and digital bookkeeping tools to make daily transactions easier.",
+  "content": "<p><strong>This is demonstration content for the news portal.</strong></p><p>Small businesses in Pokhara are expanding their use of QR payments and simple digital bookkeeping systems.</p><h2>Why adoption is growing</h2><p>Business owners say customers increasingly prefer cashless payments, while digital records make it easier to track daily sales.</p><ol><li>Faster checkout</li><li>Clearer transaction records</li><li>Reduced need to handle cash</li></ol><p>Owners also note that staff training and reliable internet access remain important.</p>",
+  "categoryId": "{{categoryBusiness.response.body.$.data.id}}",
+  "status": "PUBLISHED",
+  "isFeatured": false,
+  "isBreaking": false,
+  "featuredImageAlt": "A customer making a digital payment at a local shop",
+  "metaTitle": "Pokhara Businesses Expand Digital Payments",
+  "metaDescription": "Small businesses in Pokhara are adopting QR payments and digital bookkeeping tools for faster, clearer transactions."
+}
+
+### 4. Popular-style sports story
+POST {{baseUrl}}/api/articles
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Community Football League Draws Young Players Across Pokhara",
+  "slug": "pokhara-community-football-league-young-players",
+  "excerpt": "A citywide community football competition is giving young players more regular match experience.",
+  "content": "<p><strong>This is demonstration content for the news portal.</strong></p><p>A community football league is bringing together youth teams from neighbourhoods across Pokhara.</p><h2>More competitive opportunities</h2><p>Coaches say regular fixtures help young players develop teamwork, discipline and confidence.</p><p>Organisers are prioritising safe venues, fair scheduling and opportunities for new teams to participate.</p>",
+  "categoryId": "{{categorySports.response.body.$.data.id}}",
+  "status": "PUBLISHED",
+  "isFeatured": true,
+  "isBreaking": false,
+  "featuredImageAlt": "Young football players competing on a local ground",
+  "metaTitle": "Pokhara Community Football League Grows",
+  "metaDescription": "Pokhara's community football league gives young players regular competitive matches and development opportunities."
+}
+
+### 5. Culture story
+POST {{baseUrl}}/api/articles
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Local Artists Bring Contemporary Work to a New Exhibition",
+  "slug": "pokhara-local-artists-contemporary-exhibition",
+  "excerpt": "A new group exhibition is showcasing painting, photography and mixed-media work by artists from the region.",
+  "content": "<p><strong>This is demonstration content for the news portal.</strong></p><p>Artists from Pokhara and nearby districts are presenting new work in a group exhibition featuring painting, photography and mixed media.</p><h2>A space for emerging voices</h2><p>The exhibition gives younger artists an opportunity to display work alongside established creators.</p><blockquote>Organisers hope the event encourages more conversation about contemporary art in the city.</blockquote><p>The programme also includes informal discussions with participating artists.</p>",
+  "categoryId": "{{categoryCulture.response.body.$.data.id}}",
+  "status": "PUBLISHED",
+  "isFeatured": false,
+  "isBreaking": false,
+  "featuredImageAlt": "Visitors viewing artwork at an exhibition",
+  "metaTitle": "Pokhara Artists Open Contemporary Exhibition",
+  "metaDescription": "A Pokhara group exhibition presents contemporary painting, photography and mixed-media work by regional artists."
+}
+
+### 6. Technology story
+POST {{baseUrl}}/api/articles
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Students Build Practical Apps at Pokhara Technology Workshop",
+  "slug": "pokhara-students-practical-apps-technology-workshop",
+  "excerpt": "Students worked in teams to create small applications focused on local services and everyday problems.",
+  "content": "<p><strong>This is demonstration content for the news portal.</strong></p><p>Students at a technology workshop in Pokhara worked in teams to design and build practical web and mobile applications.</p><h2>Learning by building</h2><p>The workshop focused on problem definition, interface design, basic development and presenting a working prototype.</p><ul><li>Local service directories</li><li>Community reporting tools</li><li>Simple tourism information apps</li></ul><p>Mentors encouraged students to test ideas with real users rather than focusing only on technical features.</p>",
+  "categoryId": "{{categoryTechnology.response.body.$.data.id}}",
+  "status": "PUBLISHED",
+  "isFeatured": false,
+  "isBreaking": false,
+  "featuredImageAlt": "Students collaborating during a technology workshop",
+  "metaTitle": "Pokhara Students Build Apps at Workshop",
+  "metaDescription": "Students in Pokhara build practical web and mobile app prototypes during a hands-on technology workshop."
+}
+
+### 7. Local environment story
+POST {{baseUrl}}/api/articles
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Neighbourhood Groups Organise Weekend Cleanup Campaign",
+  "slug": "pokhara-neighbourhood-weekend-cleanup-campaign",
+  "excerpt": "Community volunteers are coordinating cleanup activities around public spaces and walking routes.",
+  "content": "<p><strong>This is demonstration content for the news portal.</strong></p><p>Neighbourhood groups are organising a weekend cleanup campaign across several public spaces in Pokhara.</p><h2>Community participation</h2><p>Volunteers will focus on waste collection, basic sorting and awareness about keeping shared spaces clean.</p><p>Participants are being asked to bring reusable gloves and drinking-water bottles where possible.</p>",
+  "categoryId": "{{categoryLocal.response.body.$.data.id}}",
+  "status": "PUBLISHED",
+  "isFeatured": false,
+  "isBreaking": false,
+  "featuredImageAlt": "Community volunteers taking part in a cleanup campaign",
+  "metaTitle": "Pokhara Groups Plan Weekend Cleanup",
+  "metaDescription": "Community groups in Pokhara organise a weekend cleanup campaign focused on public spaces and walking routes."
+}
+
+### 8. Tourism / adventure story
+POST {{baseUrl}}/api/articles
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Adventure Operators Review Safety Procedures Before Peak Season",
+  "slug": "pokhara-adventure-operators-review-safety",
+  "excerpt": "Adventure companies are reviewing equipment, weather procedures and staff readiness before the busy season.",
+  "content": "<p><strong>This is demonstration content for the news portal.</strong></p><p>Adventure tourism operators are reviewing equipment checks, weather procedures and staff readiness before peak season.</p><h2>Preparation priorities</h2><ul><li>Equipment inspection</li><li>Weather monitoring</li><li>Emergency communication</li><li>Visitor briefings</li></ul><p>Operators say clear communication with guests is as important as technical preparation.</p>",
+  "categoryId": "{{categoryTourism.response.body.$.data.id}}",
+  "status": "PUBLISHED",
+  "isFeatured": false,
+  "isBreaking": false,
+  "featuredImageAlt": "Adventure tourism equipment being checked before use",
+  "metaTitle": "Pokhara Adventure Operators Review Safety",
+  "metaDescription": "Adventure tourism operators in Pokhara review equipment, weather and emergency procedures before peak season."
+}
+
+### 9. Business market story
+POST {{baseUrl}}/api/articles
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Weekend Market Gives Small Producers Direct Access to Customers",
+  "slug": "pokhara-weekend-market-small-producers",
+  "excerpt": "A weekend market is helping farmers, food producers and craftspeople sell directly to local customers.",
+  "content": "<p><strong>This is demonstration content for the news portal.</strong></p><p>A weekend market is giving small producers a direct way to reach customers in Pokhara.</p><h2>Products on offer</h2><p>Stalls include seasonal produce, packaged foods, handmade items and locally designed products.</p><p>Organisers say direct sales help producers understand customer preferences while keeping more value within the local economy.</p>",
+  "categoryId": "{{categoryBusiness.response.body.$.data.id}}",
+  "status": "PUBLISHED",
+  "isFeatured": false,
+  "isBreaking": false,
+  "featuredImageAlt": "Local producers selling goods at a weekend market",
+  "metaTitle": "Pokhara Weekend Market Supports Producers",
+  "metaDescription": "A Pokhara weekend market connects farmers, food producers and craftspeople directly with local customers."
+}
+
+### 10. Sports story
+POST {{baseUrl}}/api/articles
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Trail Running Event Highlights Routes Around the Valley",
+  "slug": "pokhara-trail-running-event-valley-routes",
+  "excerpt": "Runners are preparing for a trail event designed to highlight scenic routes around the Pokhara Valley.",
+  "content": "<p><strong>This is demonstration content for the news portal.</strong></p><p>A trail running event is bringing attention to scenic routes around the Pokhara Valley.</p><h2>Route preparation</h2><p>Organisers are marking key turns, preparing hydration points and briefing volunteers about safety procedures.</p><p>Participants are encouraged to train for changing terrain and monitor weather conditions before race day.</p>",
+  "categoryId": "{{categorySports.response.body.$.data.id}}",
+  "status": "PUBLISHED",
+  "isFeatured": false,
+  "isBreaking": false,
+  "featuredImageAlt": "Trail runners on a route overlooking the valley",
+  "metaTitle": "Pokhara Trail Event Highlights Valley Routes",
+  "metaDescription": "A trail running event highlights scenic routes around Pokhara while organisers focus on safety and preparation."
+}
+
+### 11. Draft article for admin workflow testing
+POST {{baseUrl}}/api/articles
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Draft: New Community Library Programme",
+  "slug": "draft-community-library-programme",
+  "excerpt": "A draft article used to test the editor and publishing workflow.",
+  "content": "<p>This draft is intentionally unpublished so the admin dashboard has realistic workflow data.</p><h2>Details to confirm</h2><ul><li>Programme launch date</li><li>Participating libraries</li><li>Opening schedule</li></ul>",
+  "categoryId": "{{categoryCulture.response.body.$.data.id}}",
+  "status": "DRAFT",
+  "isFeatured": false,
+  "isBreaking": false,
+  "metaTitle": "Community Library Programme Draft",
+  "metaDescription": "Draft article for testing the Ramailo Pokhara editorial workflow."
+}
+
+### 12. Archived article for admin filtering tests
+POST {{baseUrl}}/api/articles
+Content-Type: application/json
+Accept: application/json
+
+{
+  "title": "Archived: Previous Technology Training Notice",
+  "slug": "archived-technology-training-notice",
+  "excerpt": "An archived demonstration article for testing status filters.",
+  "content": "<p>This sample article is archived and should not appear on the public website.</p>",
+  "categoryId": "{{categoryTechnology.response.body.$.data.id}}",
+  "status": "ARCHIVED",
+  "isFeatured": false,
+  "isBreaking": false,
+  "metaTitle": "Archived Technology Training Notice",
+  "metaDescription": "Archived sample article used to test dashboard filtering."
+}
+
+###############################################################################
+# OPTIONAL CHECKS
+###############################################################################
+
+### Public articles
+GET {{baseUrl}}/api/articles?limit=50&sort=publishedAt&order=desc
+Accept: application/json
+
+### Featured articles
+GET {{baseUrl}}/api/articles?featured=true&limit=10&sort=publishedAt&order=desc
+Accept: application/json
+
+### Breaking articles
+GET {{baseUrl}}/api/articles?breaking=true&limit=10&sort=publishedAt&order=desc
+Accept: application/json
+
+### Popular articles
+GET {{baseUrl}}/api/articles?limit=10&sort=views&order=desc
+Accept: application/json
+
+### Active categories
+GET {{baseUrl}}/api/categories?active=true
+Accept: application/json
+
+### Search
+GET {{baseUrl}}/api/articles?search=Pokhara&limit=20
+Accept: application/json
+
+###############################################################################
+# OPTIONAL IMAGE UPLOAD EXAMPLE
+# Change the file path before running. Copy the returned data.url into an
+# article's featuredImage field through PATCH or the admin editor.
+###############################################################################
+
+### Upload featured image
+POST {{baseUrl}}/api/uploads/images
+Content-Type: multipart/form-data; boundary=ArticleImageBoundary
+Accept: application/json
+
+--ArticleImageBoundary
+Content-Disposition: form-data; name="file"; filename="article-image.jpg"
+Content-Type: image/jpeg
+
+< ./article-image.jpg
+--ArticleImageBoundary--
+
+###############################################################################
+# OPTIONAL LOGOUT
+###############################################################################
+
+### Get CSRF token again before logout
+# @name logoutCsrf
+GET {{baseUrl}}/api/auth/csrf
+Accept: application/json
+
+### Sign out
+POST {{baseUrl}}/api/auth/signout
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+csrfToken={{logoutCsrf.response.body.$.csrfToken}}&callbackUrl={{baseUrl}}/&json=true
